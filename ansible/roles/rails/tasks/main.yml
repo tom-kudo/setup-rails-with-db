@@ -1,0 +1,81 @@
+- name: install rbenv
+  git: repo=git://github.com/sstephenson/rbenv.git dest=/usr/local/rbenv update=no accept_hostkey=yes
+
+- name: add rbenv path
+  become: yes
+  become_user: vagrant
+  lineinfile: >
+    dest=~/.bashrc
+    line='PATH="/usr/local/rbenv/bin:/sbin/:${PATH}"'
+    create=yes
+
+- name: set .rbenv path
+  become: yes
+  become_user: vagrant
+  lineinfile: >
+    dest=~/.bashrc
+    line='eval "$(rbenv init -)"'
+    create=yes
+
+- name: download ruby-build repository
+  become: yes
+  become_user: vagrant
+  git: repo=https://github.com/sstephenson/ruby-build.git dest=~/.rbenv/plugins/ruby-build
+
+- name: check ruby installed version
+  become: yes
+  become_user: vagrant
+  shell: bash -lc "rbenv versions"
+  register: ruby_installed_version_result
+  ignore_errors: True
+
+- name: install ruby via rbenv 
+  become: yes
+  become_user: vagrant
+  shell: bash -lc "rbenv install {{ ruby.version }}"
+  when: ruby_installed_version_result is failed
+
+- name: set global rbenv
+  become: yes
+  become_user: vagrant
+  shell: bash -lc "rbenv global {{ ruby.version }}"
+  when: ruby_installed_version_result is failed
+
+- name: check rails installed version
+  become: yes
+  become_user: vagrant
+  shell: bash -lc "rails --version"
+  register: rails_installed_version_result
+  ignore_errors: True
+
+- name: install rails
+  become: yes
+  become_user: vagrant
+  shell: bash -lc "gem install rails --version "={{ rails.version }}" --no-document"
+  when: rails_installed_version_result is failed
+
+- name: install latest bundler
+  become: yes
+  become_user: vagrant
+  shell: bash -lc "gem install bundler"
+  when: rails_installed_version_result is failed
+
+- name: bundler config for postgresql
+  become: yes
+  become_user: vagrant
+  shell: bash -lc "bundle config build.pg --with-pg-config=/usr/pgsql-9.6/bin/pg_config"
+  when: rails_installed_version_result is failed
+
+- name: set rails environment variables
+  become: yes
+  become_user: vagrant
+  lineinfile: 
+    dest=~/.bash_profile
+    line={{ item }}
+  with_items:
+    - ' '
+    - '# for Rails Env'
+    - 'RAILS_ENV=development'
+    - 'HOST=0.0.0.0'
+    - 'TRUSTED_IP=192.168.12.1'
+    - 'export RAILS_ENV HOST TRUSTED_IP'

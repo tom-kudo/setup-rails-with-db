@@ -1,0 +1,63 @@
+- name: install postgres-community-9.6 repository
+  yum:
+    name: "https://download.postgresql.org/pub/repos/yum/9.6/redhat/rhel-7-x86_64/pgdg-centos96-9.6-3.noarch.rpm"
+  ignore_errors: True
+
+- name: check postgresql service status
+  shell: bash -lc "systemctl status postgresql-9.6 | grep -v inactive | grep active"
+  register: postgresql_service_status
+  ignore_errors: True
+  
+- name: install postgres-community-9.6
+  yum:
+    name: "{{ packages }}"
+    state: present
+  vars: 
+    packages:
+      - postgresql96-server
+      - postgresql96-contrib
+      - postgresql96-devel
+  when: postgresql_service_status is failed
+
+- name: set password for postgres user (linux)
+  shell: echo -e "pass12word34\npass12word34\n" | passwd postgres
+  when: postgresql_service_status is failed
+
+- name: initialize postgresql
+  shell: bash -lc "/usr/pgsql-9.6/bin/postgresql96-setup initdb"
+  when: postgresql_service_status is failed
+
+- name: edit pg_hba.conf
+  become: yes
+  become_user: postgres
+  shell: bash -lc 'echo "host    all             vagrant         all                     password" >> /var/lib/pgsql/9.6/data/pg_hba.conf'
+  when: postgresql_service_status is failed
+
+- name: edit postgresql.conf
+  become: yes
+  become_user: postgres
+  replace: 
+    dest=/var/lib/pgsql/9.6/data/postgresql.conf
+    regexp="^#listen_addresses = 'localhost'"
+    replace="listen_addresses = '*'         "
+  when: postgresql_service_status is failed
+
+- name: start postgresql
+  service:
+    name: postgresql-9.6
+    state: started
+    enabled: yes
+  when: postgresql_service_status is failed
+
+- name: copy sql file
+  become: yes
+  become_user: postgres
+  copy: src=vagrant.sql dest=/var/lib/pgsql/
+  when: postgresql_service_status is failed
+
+- name: create vagrant role
+  become: yes
+  become_user: postgres
+  shell: bash -lc "psql -f /var/lib/pgsql/vagrant.sql"
+  when: postgresql_service_status is failed
+

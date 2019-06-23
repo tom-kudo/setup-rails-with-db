@@ -1,0 +1,24 @@
+- name: check samba user
+  shell: pdbedit -L | grep vagrant
+  register: pdbedit_grep_vagrant_result
+  ignore_errors: True
+
+- name: add samba user
+  shell: echo -e "vagrant\nvagrant\n" | pdbedit -t -a vagrant
+  when: pdbedit_grep_vagrant_result is failed
+
+- name: enable samba service
+  service: name=smb enabled=yes state=started
+
+- name: set application environment variables
+  become: yes
+  become_user: vagrant
+  lineinfile: 
+    dest=~/.bash_profile
+    line={{ item }}
+  with_items:
+    - '  '
+    - '# for database.yml environment'
+    - 'DATABASE_USERNAME=vagrant'
+    - 'DATABASE_PASSWORD=pass12word34'
+    - 'export DATABASE_USERNAME DATABASE_PASSWORD'

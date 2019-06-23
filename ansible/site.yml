@@ -1,0 +1,15 @@
+- hosts: all
+  user: vagrant
+  become: true
+  become_user: root
+  vars:
+    timezone: Asia/Tokyo
+  vars_files:
+    - vars/common.yml
+    - vars/packages.yml
+  roles:
+    - common
+    - postgresql
+    - node
+    - rails
+    - setup_project

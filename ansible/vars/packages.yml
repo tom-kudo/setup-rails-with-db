@@ -1,0 +1,4 @@
+sys_packages: ["git", "wget", "tree", "gcc", "gcc-c++", "openssl-devel", "zlib-devel", "libselinux-python", "ntp", "postfix", "man", "samba",
+  "glibc-headers", "readline", "libyaml-devel", "readline-devel", "zlib", "libxml2", "libxslt", "libxml2-devel", "libxslt-devel",
+  "sqlite-devel", "unzip",  "libcurl-devel", "lsof", "sysstat", "tcpdump"]
+sys_packages_with_repos: ["libmcrypt", "redis"]

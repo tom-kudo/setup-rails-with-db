@@ -1,0 +1,8 @@
+nvm:
+  version: v0.34.0
+nodejs:
+  version: 8.5.0
+ruby:
+  version: 2.6.3
+rails:
+  version: 5.2.3

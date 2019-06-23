@@ -1,0 +1,31 @@
+- name: install sys packages
+  yum:
+    name: "{{ sys_packages }}"
+    state: present
+
+- name: install remi repos
+  yum:
+    name: "http://rpms.famillecollet.com/enterprise/remi-release-7.rpm"
+    state: present
+  ignore_errors: True
+
+- replace: dest=/etc/yum.repos.d/{{ item }} regexp="enabled *= *1" replace="enabled=0"
+  with_items:
+    - epel.repo
+    - remi.repo
+  ignore_errors: True
+
+- name: install sys packages with repos(remi,epel)
+  yum:
+    name: "{{ sys_packages_with_repos }}"
+    state: present
+    enablerepo: remi,epel
+
+- name: change timezone to Asia/Tokyo
+  shell: bash -lc "timedatectl set-timezone Asia/Tokyo"
+
+- name: copy ntp.conf
+  copy: src=ntp.conf dest=/etc/ntp.conf mode=0400
+
+- name: service startup ntpd
+  service: name=ntpd enabled=yes state=started

@@ -1,0 +1,46 @@
+- name: install nvm
+  become: yes
+  become_user: vagrant
+  git: repo=https://github.com/creationix/nvm.git
+       dest=~/.nvm
+       version={{ nvm.version }}
+
+- name: enabled nvm
+  become: yes
+  become_user: vagrant
+  lineinfile: dest=~/.bashrc
+              regexp="^source.*nvm.*" 
+              line="source ~/.nvm/nvm.sh"
+              insertafter=EOF
+  
+- name: install nodejs with nvm
+  become: yes
+  become_user: vagrant
+  raw: /bin/bash -lc "nvm install {{ nodejs.version }}"; /bin/bash -lc "nvm alias default {{ nodejs.version }}"
+
+- name: update npm
+  become: yes
+  become_user: vagrant
+  raw: /bin/bash -lc "npm install -g npm"
+
+- name: set npm ulimit settings
+  become: yes
+  become_user: vagrant
+  lineinfile:
+    dest=~/.bash_profile
+    line={{ item }}
+  with_items:
+    - ' '
+    - '# for npm ulimit settings'
+    - 'ulimit -n 2048         # open files'
+    - 'ulimit -s 16384        # stack size'
+
+- name: install yarn
+  become: yes
+  become_user: vagrant
+  raw: /bin/bash -lc "npm install -g yarn@1.9.4"
+
+- name: install webpack
+  become: yes
+  become_user: vagrant
+  raw: /bin/bash -lc "npm install -g webpack"
